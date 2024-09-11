@@ -1,0 +1,31 @@
+spring.application.name: user-service
+server:
+  port: 8081
+
+spring:
+  sql:
+    init:
+      mode: always
+  jackson:
+    time-zone: UTC
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true # kasnije makni
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+    defer-datasource-initialization: true
+  datasource:
+    url: jdbc:mariadb://user-service-db:3306/user_service_repository
+    username: root
+    password: ${MARIADB_USER_REPOSITORY_ROOT_PASSWORD}
+    driver-class-name: org.mariadb.jdbc.Driver
+
+#  spring:
+#    datasource:
+#      url: jdbc:<database-type>://<host>:<port>/<database-name>
+#      username: <your-username>
+#      password: ${YOUR_PASSWORD_ENV_VARIABLE}
+#      driver-class-name: <your.jdbc.Driver>
