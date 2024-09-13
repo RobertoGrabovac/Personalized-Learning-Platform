@@ -14,7 +14,18 @@ public class AccountTypeFilterConfig {
     }
 
     @Bean
+    public AccountTypeFilter standardAccountTypeCheckFilter() {
+        return new AccountTypeFilter(webClientBuilder, new AccountTypeFilter.Config(AccountType.STANDARD));
+    }
+
+    @Bean
+    public AccountTypeFilter premiumAccountTypeCheckFilter() {
+        return new AccountTypeFilter(webClientBuilder, new AccountTypeFilter.Config(AccountType.PREMIUM));
+    }
+
+    @Bean
     public AccountTypeFilter adminAccountTypeCheckFilter() {
         return new AccountTypeFilter(webClientBuilder, new AccountTypeFilter.Config(AccountType.ADMIN));
     }
+
 }
