@@ -10,6 +10,20 @@ services:
     #   timeout: 30s
     #   test: "curl --fail --silent localhost:8080/actuator/health | grep UP || exit 1"
 
+  learning-recommender-service:
+    build: ./learning-recommender-service
+    restart: unless-stopped
+    user: ${UID}:${GID}
+    depends_on:
+      user-service-db:
+        condition: service_healthy
+    environment:
+      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT},
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY},
+      DEPLOYMENT_NAME: ${DEPLOYMENT_NAME}
+#    ports:
+#      - "8082:8082"
+
   user-service:
     build: ./user-service
     restart: unless-stopped

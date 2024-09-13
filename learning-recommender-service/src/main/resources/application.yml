@@ -1,0 +1,10 @@
+spring.application.name: learning-recommender-service
+
+server:
+  port: 8082
+
+learning-recommender-service:
+  azure:
+    api-endpoint: ${AZURE_OPENAI_ENDPOINT}
+    api-key: ${AZURE_OPENAI_API_KEY}
+    deployment-name: ${DEPLOYMENT_NAME}
