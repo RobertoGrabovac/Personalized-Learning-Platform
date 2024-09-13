@@ -3,6 +3,14 @@ spring.application.name: learning-recommender-service
 server:
   port: 8082
 
+management:
+  server:
+    port: 8083
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+
 learning-recommender-service:
   azure:
     api-endpoint: ${AZURE_OPENAI_ENDPOINT}
