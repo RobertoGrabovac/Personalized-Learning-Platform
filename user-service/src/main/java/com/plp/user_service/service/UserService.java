@@ -6,12 +6,12 @@ import com.plp.user_service.storage.UserEntity;
 import com.plp.user_service.storage.UserRepository;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 public class UserService {
+
+    private static final String AUTHORIZATION_HEADER_PREFIX = "Basic ";
 
     private final UserRepository userRepository;
 
@@ -31,11 +31,6 @@ public class UserService {
     }
 
     public User createUser(User user) {
-//        if (user.id() != null ) {
-//            throw InvalidActivityException.becauseTheIdIsProvided(user.id().toString());
-//        } else if (user.apiKey() != null) {
-//            throw InvalidActivityException.becauseTheApiKeyIsProvided(user.apiKey());
-//        }
         String apiKey = UUID.randomUUID().toString().replace("-", "");
 
         var userEntity = new UserEntity(
@@ -67,4 +62,35 @@ public class UserService {
         userRepository.deleteById(userId);
     }
 
+    public Boolean validateAccountType(String authHeader, AccountType accountType) {
+        return extractApiKey(authHeader)
+                .flatMap(this::findUserByApiKey)
+                .map(user -> user.accountType().ordinal() >= accountType.ordinal())
+                .orElse(false);
+    }
+
+    private Optional<User> findUserByApiKey(String apiKey) {
+        return Optional.of(userRepository.findByApiKey(apiKey)
+                .map(User::fromUserEntity)
+                .orElseThrow());
+    }
+
+    // TODO: refactor
+    private Optional<String> extractApiKey(String authorizationHeaderValue) {
+        String base64Credentials = authorizationHeaderValue.substring("Basic ".length()).trim();
+
+        byte[] decodedBytes = Base64.getDecoder().decode(base64Credentials);
+        String decodedCredentials = new String(decodedBytes);
+
+        String[] credentials = decodedCredentials.split(":", 2);
+        if (credentials.length == 2) {
+            String username = credentials[0];
+            String password = credentials[1];
+            System.out.println("Username: " + username);
+            System.out.println("Password: " + password);
+        } else {
+            System.out.println("Invalid credentials format.");
+        }
+        return Optional.ofNullable(credentials[1]);
+    }
 }

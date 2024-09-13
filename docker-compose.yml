@@ -1,4 +1,15 @@
 services:
+  api-gateway:
+    build: ./api-gateway
+    restart: unless-stopped
+    ports:
+      - "8085:8080" # TODO: pogledaj zasto ne moze se mapirati na 8080 od hosta
+    # healthcheck:
+    #   interval: 10s
+    #   retries: 10
+    #   timeout: 30s
+    #   test: "curl --fail --silent localhost:8080/actuator/health | grep UP || exit 1"
+
   user-service:
     build: ./user-service
     restart: unless-stopped
@@ -8,8 +19,8 @@ services:
         condition: service_healthy
     environment:
       MARIADB_USER_REPOSITORY_ROOT_PASSWORD: ${MARIADB_USER_REPOSITORY_ROOT_PASSWORD}
-    ports:
-      - "8081:8081"
+#    ports:
+#      - "8081:8081"
 
   user-service-db:
     image: mariadb:lts-jammy

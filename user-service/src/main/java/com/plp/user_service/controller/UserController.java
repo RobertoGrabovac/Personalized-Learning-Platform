@@ -26,6 +26,12 @@ public class UserController {
         this.userService = userService;
     }
 
+    @GetMapping("/validateAccountType")
+    public Boolean validateAccountType(@RequestHeader("Authorization") String authHeader,
+                                       @RequestParam AccountType accountType) {
+        return userService.validateAccountType(authHeader, accountType);
+    }
+
     @GetMapping("/all")
     public List<User> getAllUsers() {
         List<UserEntity> userEntities = userService.getAllUsers();
@@ -52,8 +58,6 @@ public class UserController {
         }
     }
 
-    // dati mogucnost updatea usernamea --> ovo za sve usere
-    // update subscriptiona <--> user je admin
     @PutMapping("/{userId}")
     public ResponseEntity<String> updateAccountType(
             @PathVariable Long userId,
