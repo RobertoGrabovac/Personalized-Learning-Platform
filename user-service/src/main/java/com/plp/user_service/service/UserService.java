@@ -4,6 +4,7 @@ import com.plp.user_service.model.User;
 import com.plp.user_service.storage.AccountType;
 import com.plp.user_service.storage.UserEntity;
 import com.plp.user_service.storage.UserRepository;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -63,34 +64,63 @@ public class UserService {
     }
 
     public Boolean validateAccountType(String authHeader, AccountType accountType) {
-        return extractApiKey(authHeader)
-                .flatMap(this::findUserByApiKey)
-                .map(user -> user.accountType().ordinal() >= accountType.ordinal())
-                .orElse(false);
+        Pair<String, String> userCredentials = extractCredentials(authHeader);
+        User user = validateUserCredentials(userCredentials.getFirst(), userCredentials.getSecond());
+
+        return user.accountType().ordinal() >= accountType.ordinal();
     }
 
-    private Optional<User> findUserByApiKey(String apiKey) {
-        return Optional.of(userRepository.findByApiKey(apiKey)
-                .map(User::fromUserEntity)
-                .orElseThrow());
-    }
-
-    // TODO: refactor
-    private Optional<String> extractApiKey(String authorizationHeaderValue) {
+    private Pair<String, String> extractCredentials(String authorizationHeaderValue) {
         String base64Credentials = authorizationHeaderValue.substring("Basic ".length()).trim();
 
         byte[] decodedBytes = Base64.getDecoder().decode(base64Credentials);
         String decodedCredentials = new String(decodedBytes);
 
         String[] credentials = decodedCredentials.split(":", 2);
-        if (credentials.length == 2) {
-            String username = credentials[0];
-            String password = credentials[1];
-            System.out.println("Username: " + username);
-            System.out.println("Password: " + password);
-        } else {
-            System.out.println("Invalid credentials format.");
+        if (credentials.length != 2) {
+            throw new IllegalArgumentException("Invalid credentials format.");
         }
-        return Optional.ofNullable(credentials[1]);
+
+        return Pair.of(credentials[0], credentials[1]);
     }
+
+    private User validateUserCredentials(String username, String apiKey) {
+        User user = userRepository.findByUsername(username)
+                .map(User::fromUserEntity)
+                .orElseThrow(() -> new NoSuchElementException("User with username " + username + " not found"));
+
+        if (!user.apiKey().equals(apiKey)) {
+            throw new SecurityException("Invalid API key: " + apiKey);
+        }
+
+        return user;
+    }
+
+//    public Boolean validateAccountType(String authHeader, AccountType accountType) {
+//        return extractApiKey(authHeader)
+//                .flatMap(this::findUserByApiKey)
+//                .map(user -> user.accountType().ordinal() >= accountType.ordinal())
+//                .orElse(false);
+//    }
+//
+//    private Optional<User> findUserByApiKey(String apiKey) {
+//        return Optional.of(userRepository.findByApiKey(apiKey)
+//                .map(User::fromUserEntity)
+//                .orElseThrow());
+//    }
+
+//    private Optional<String> extractApiKey(String authorizationHeaderValue) {
+//        String base64Credentials = authorizationHeaderValue.substring("Basic ".length()).trim();
+//
+//        byte[] decodedBytes = Base64.getDecoder().decode(base64Credentials);
+//        String decodedCredentials = new String(decodedBytes);
+//
+//        String[] credentials = decodedCredentials.split(":", 2);
+//
+//        if (credentials.length != 2) {
+//            throw new IllegalArgumentException("Invalid credentials format.");
+//        }
+//
+//        return Optional.ofNullable(credentials[1]);
+//    }
 }

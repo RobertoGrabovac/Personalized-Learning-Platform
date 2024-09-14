@@ -3,12 +3,19 @@ package com.plp.api_gateway.filter;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.core.Ordered;
+import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClient.Builder;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+
+import java.nio.charset.StandardCharsets;
+import java.util.NoSuchElementException;
 
 public class AccountTypeFilter extends AbstractGatewayFilterFactory<AccountTypeFilter.Config> implements Ordered {
 
@@ -41,31 +48,74 @@ public class AccountTypeFilter extends AbstractGatewayFilterFactory<AccountTypeF
         return config;
     }
 
-    // TODO: wrong api key
     @Override
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
             String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
             if (authHeader == null || authHeader.isEmpty()) {
-                return createErrorResponse(exchange, HttpStatus.UNAUTHORIZED);
+                return createErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Missing or empty Authorization header");
             }
 
             return webClient.get()
                     .uri("/users/validateAccountType?accountType=" + config.getAccountType().name())
                     .header(HttpHeaders.AUTHORIZATION, authHeader)
                     .retrieve()
+                    .onStatus(HttpStatusCode::is4xxClientError, this::handleClientError)
                     .bodyToMono(Boolean.class)
                     .flatMap(hasRole -> Boolean.TRUE.equals(hasRole)
                             ? chain.filter(exchange)
-                            : createErrorResponse(exchange, HttpStatus.FORBIDDEN))
-                    .onErrorResume(e -> createErrorResponse(exchange, HttpStatus.INTERNAL_SERVER_ERROR));
+                            : createErrorResponse(exchange, HttpStatus.FORBIDDEN,
+                            "Forbidden: User does not have the required account type"))
+                    .onErrorResume(e -> handleError(e, exchange));
         };
     }
 
-    private Mono<Void> createErrorResponse(ServerWebExchange exchange, HttpStatus status) {
+    // TODO: ask if there is more convenient way of resolving errors via api-gateway (handleClientError&handleError)
+    private Mono<Throwable> handleClientError(ClientResponse response) {
+        HttpStatus status = (HttpStatus) response.statusCode();
+
+        return Mono.error(switch (status) {
+            case UNAUTHORIZED -> new SecurityException("Invalid API key");
+            case NOT_FOUND -> new NoSuchElementException("User not found");
+            default -> new IllegalArgumentException("Invalid input");
+        });
+    }
+
+    private Mono<Void> handleError(Throwable e, ServerWebExchange exchange) {
+        return Mono.defer(() -> {
+            HttpStatus status;
+            String message;
+
+            switch (e) {
+                case SecurityException se -> {
+                    status = HttpStatus.UNAUTHORIZED;
+                    message = se.getMessage();
+                }
+                case NoSuchElementException nsee -> {
+                    status = HttpStatus.NOT_FOUND;
+                    message = nsee.getMessage();
+                }
+                case IllegalArgumentException iae -> {
+                    status = HttpStatus.BAD_REQUEST;
+                    message = iae.getMessage();
+                }
+                default -> {
+                    status = HttpStatus.INTERNAL_SERVER_ERROR;
+                    message = "An internal server error occurred";
+                }
+            }
+
+            return createErrorResponse(exchange, status, message);
+        });
+    }
+
+    private Mono<Void> createErrorResponse(ServerWebExchange exchange, HttpStatus status, String message) {
         exchange.getResponse().setStatusCode(status);
-        return exchange.getResponse().setComplete();
+        byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
+        DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
+        exchange.getResponse().getHeaders().setContentType(MediaType.TEXT_PLAIN);
+        return exchange.getResponse().writeWith(Mono.just(buffer));
     }
 
     @Override

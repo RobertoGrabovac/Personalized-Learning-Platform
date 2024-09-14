@@ -27,9 +27,11 @@ public class UserController {
     }
 
     @GetMapping("/validateAccountType")
-    public Boolean validateAccountType(@RequestHeader("Authorization") String authHeader,
-                                       @RequestParam AccountType accountType) {
-        return userService.validateAccountType(authHeader, accountType);
+    public ResponseEntity<Boolean> validateAccountType(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam AccountType accountType) {
+        Boolean isValid = userService.validateAccountType(authHeader, accountType);
+        return ResponseEntity.ok(isValid);
     }
 
     @GetMapping("/all")
