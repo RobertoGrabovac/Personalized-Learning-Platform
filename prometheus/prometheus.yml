@@ -9,3 +9,6 @@ scrape_configs:
       - targets: ['learning-recommender-service:8083']
         labels:
           service: learning-recommender-service
+      - targets: [ 'api-gateway:8083' ]
+        labels:
+          service: api-gateway

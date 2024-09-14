@@ -1,5 +1,6 @@
 package com.plp.api_gateway.filter;
 
+import com.plp.api_gateway.Statistics;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.core.Ordered;
@@ -15,17 +16,25 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 public class AccountTypeFilter extends AbstractGatewayFilterFactory<AccountTypeFilter.Config> implements Ordered {
 
     private final WebClient webClient;
     private final Config config;
+    private final Statistics statistics;
 
-    public AccountTypeFilter(Builder webClientBuilder, Config config) {
+    private static final Map<String, String> PATH_TO_SERVICE_MAP = Map.of(
+            "/users", "user-service",
+            "/course", "learning-recommender-service"
+    );
+
+    public AccountTypeFilter(Builder webClientBuilder, Config config, Statistics statistics) {
         super(Config.class);
         this.webClient = webClientBuilder.baseUrl("http://user-service:8081").build();
         this.config = config;
+        this.statistics = statistics;
     }
 
     public static class Config {
@@ -53,6 +62,15 @@ public class AccountTypeFilter extends AbstractGatewayFilterFactory<AccountTypeF
         return (exchange, chain) -> {
             String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
+            String path = exchange.getRequest().getURI().getPath();
+            String serviceName = PATH_TO_SERVICE_MAP.entrySet().stream()
+                    .filter(entry -> path.startsWith(entry.getKey()))
+                    .map(Map.Entry::getValue)
+                    .findFirst()
+                    .orElse("unknown-service");
+
+            statistics.incrementServiceCalls(serviceName);
+
             if (authHeader == null || authHeader.isEmpty()) {
                 return createErrorResponse(exchange, HttpStatus.UNAUTHORIZED, "Missing or empty Authorization header");
             }
@@ -74,6 +92,15 @@ public class AccountTypeFilter extends AbstractGatewayFilterFactory<AccountTypeF
     // TODO: ask if there is more convenient way of resolving errors via api-gateway (handleClientError&handleError)
     private Mono<Throwable> handleClientError(ClientResponse response) {
         HttpStatus status = (HttpStatus) response.statusCode();
+
+        String statusCode = switch (status) {
+            case UNAUTHORIZED -> "UNAUTHORIZED";
+            case NOT_FOUND -> "NOT_FOUND";
+            case BAD_REQUEST -> "BAD_REQUEST";
+            default -> "INTERNAL_SERVER_ERROR";
+        };
+
+        statistics.incrementHttpsStatusCounter(statusCode);
 
         return Mono.error(switch (status) {
             case UNAUTHORIZED -> new SecurityException("Invalid API key");

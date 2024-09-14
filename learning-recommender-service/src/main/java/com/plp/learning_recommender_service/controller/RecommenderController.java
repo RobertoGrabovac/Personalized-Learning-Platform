@@ -2,13 +2,11 @@ package com.plp.learning_recommender_service.controller;
 
 import com.plp.learning_recommender_service.Statistics;
 import com.plp.learning_recommender_service.service.RecommenderService;
-import io.micrometer.core.instrument.Counter;
 import jakarta.validation.constraints.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import io.micrometer.core.instrument.MeterRegistry;
 
 @RestController
 @RequestMapping("/course")
