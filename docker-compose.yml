@@ -36,6 +36,33 @@ services:
 #    ports:
 #      - "8081:8081"
 
+  course-service:
+    build: ./course-service
+    restart: unless-stopped
+    user: ${UID}:${GID}
+    depends_on:
+      course-service-db:
+        condition: service_healthy
+    environment:
+      MARIADB_USER_REPOSITORY_ROOT_PASSWORD: ${MARIADB_USER_REPOSITORY_ROOT_PASSWORD}
+    ports:
+      - "8087:8087"
+
+  course-service-db:
+    image: mariadb:lts-jammy
+    restart: unless-stopped
+    user: ${UID}:${GID}
+    environment:
+      MARIADB_DATABASE: course_service_repository
+      MARIADB_ROOT_PASSWORD: ${MARIADB_USER_REPOSITORY_ROOT_PASSWORD}
+    volumes:
+      - ./course-service-db/data:/var/lib/mysql:Z
+    healthcheck:
+      interval: 10s
+      retries: 10
+      timeout: 30s
+      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
+
   user-service-db:
     image: mariadb:lts-jammy
     restart: unless-stopped
