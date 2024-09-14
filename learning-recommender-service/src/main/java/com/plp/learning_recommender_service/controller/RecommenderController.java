@@ -1,5 +1,6 @@
 package com.plp.learning_recommender_service.controller;
 
+import com.plp.learning_recommender_service.Statistics;
 import com.plp.learning_recommender_service.service.RecommenderService;
 import io.micrometer.core.instrument.Counter;
 import jakarta.validation.constraints.*;
@@ -14,13 +15,11 @@ import io.micrometer.core.instrument.MeterRegistry;
 public class RecommenderController {
 
     private final RecommenderService recommenderService;
-    private final Counter recommendCounter;
-    private final Counter analysisCounter;
+    private final Statistics statistics;
 
-    public RecommenderController(RecommenderService recommenderService,  MeterRegistry meterRegistry) {
+    public RecommenderController(RecommenderService recommenderService, Statistics statistics) {
         this.recommenderService = recommenderService;
-        this.recommendCounter = meterRegistry.counter("course.recommend.counter");
-        this.analysisCounter = meterRegistry.counter("course.analysis.counter");
+        this.statistics = statistics;
     }
 
     @GetMapping("/recommend")
@@ -46,7 +45,7 @@ public class RecommenderController {
             @Max(value = 5, message = "Maximum ECTS is 10")
             Integer ects
     ) {
-        recommendCounter.increment();
+        statistics.registerReccomendCourse();
         return recommenderService.recommendCourse(topic, faculty, semester, ects);
     }
 
@@ -67,7 +66,7 @@ public class RecommenderController {
             @Size(max = 200, message = "Additional details must be less than 200 characters")
             String details
     ) {
-        analysisCounter.increment();
+        statistics.registerAnalyzeCourse();
         return recommenderService.getCourseAnalysis(course, faculty, details);
     }
 }
