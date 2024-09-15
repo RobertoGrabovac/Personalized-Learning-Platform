@@ -32,6 +32,10 @@ public class RoutingConfig {
                         .filters(f -> f.filter(adminAccountTypeFilter.apply(adminAccountTypeFilter.getConfig())))
                         .uri("http://user-service:8081")
                 ).route(p -> p
+                        .path("/courses/**")
+                        .filters(f -> f.filter(standardAccountTypeFilter.apply(standardAccountTypeFilter.getConfig())))
+                        .uri("http://course-service:8083")
+                ).route(p -> p
                         .path("/course/analysis")
                         .filters(f -> f.filter(premiumAccountTypeFilter.apply(premiumAccountTypeFilter.getConfig())))
                         .uri("http://learning-recommender-service:8082")

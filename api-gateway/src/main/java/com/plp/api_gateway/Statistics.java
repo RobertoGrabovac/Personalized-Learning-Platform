@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 public class Statistics {
 
     private static final String USER_SERVICE_CALLS_COUNTER_NAME = "user_service_calls_count";
+    private static final String COURSE_SERVICE_CALLS_COUNTER_NAME = "course_service_calls_count";
     private static final String LEARNING_RECOMMENDER_SERVICE_CALLS_COUNTER_NAME = "learning_recommender_service_calls_count";
 
     private static final String UNAUTHORIZED_COUNTER_NAME = "http_unauthorized_count";
@@ -21,6 +22,7 @@ public class Statistics {
     public void incrementServiceCalls(String serviceName) {
         String counterName = switch (serviceName) {
             case "user-service" -> USER_SERVICE_CALLS_COUNTER_NAME;
+            case "course-service" -> COURSE_SERVICE_CALLS_COUNTER_NAME;
             case "learning-recommender-service" -> LEARNING_RECOMMENDER_SERVICE_CALLS_COUNTER_NAME;
             default -> throw new IllegalArgumentException("Unknown service: " + serviceName);
         };

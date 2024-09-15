@@ -27,6 +27,7 @@ public class AccountTypeFilter extends AbstractGatewayFilterFactory<AccountTypeF
 
     private static final Map<String, String> PATH_TO_SERVICE_MAP = Map.of(
             "/users", "user-service",
+            "/courses", "course-service",
             "/course", "learning-recommender-service"
     );
 

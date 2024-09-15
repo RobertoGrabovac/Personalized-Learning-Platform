@@ -45,8 +45,8 @@ services:
         condition: service_healthy
     environment:
       MARIADB_USER_REPOSITORY_ROOT_PASSWORD: ${MARIADB_USER_REPOSITORY_ROOT_PASSWORD}
-    ports:
-      - "8087:8087"
+#    ports:
+#      - "8087:8083"
 
   course-service-db:
     image: mariadb:lts-jammy
@@ -82,7 +82,7 @@ services:
     image: prom/prometheus:v2.52.0
     restart: unless-stopped
     ports:
-      - "9091:9090" # mora 9091 jer meni je to docker engine zbog docker desktopa
+      - "9091:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus/data:/prometheus
