@@ -79,21 +79,6 @@ public class CourseService {
         return dto;
     }
 
-    private CourseResponseDTO mapToCourseResponseDTO(CourseEntity course) {
-        CourseResponseDTO dto = new CourseResponseDTO();
-        dto.setId(course.getId());
-        dto.setCourseName(course.getCourseName());
-        dto.setFaculty(course.getFaculty());
-        dto.setSemester(course.getSemester());
-        dto.setEcts(course.getEcts());
-        dto.setParticipantIds(
-                course.getParticipants().stream()
-                        .map(CourseParticipantEntity::getUserId)
-                        .collect(Collectors.toList())
-        );
-        return dto;
-    }
-
     public void deleteCourse(Long courseId) {
         Optional<CourseEntity> course = courseRepository.findById(courseId);
         if (course.isPresent()) {
@@ -112,6 +97,21 @@ public class CourseService {
 
         course.getParticipants().remove(participant);
         courseParticipantRepository.delete(participant);
+    }
+
+    private CourseResponseDTO mapToCourseResponseDTO(CourseEntity course) {
+        CourseResponseDTO dto = new CourseResponseDTO();
+        dto.setId(course.getId());
+        dto.setCourseName(course.getCourseName());
+        dto.setFaculty(course.getFaculty());
+        dto.setSemester(course.getSemester());
+        dto.setEcts(course.getEcts());
+        dto.setParticipantIds(
+                course.getParticipants().stream()
+                        .map(CourseParticipantEntity::getUserId)
+                        .collect(Collectors.toList())
+        );
+        return dto;
     }
 }
 

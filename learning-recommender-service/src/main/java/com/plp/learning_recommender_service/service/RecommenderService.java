@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-// TODO: comment out methods returns
 @Service
 public class RecommenderService {
 
@@ -48,9 +47,7 @@ public class RecommenderService {
                 Optional.ofNullable(ects).map(String::valueOf).orElse("any")
         );
 
-        return prompt + learningRecommender.getAzure().getDeploymentName() + learningRecommender.getAzure().getApiEndpoint() +
-                learningRecommender.getAzure().getApiKey();
-        // return getChatCompletion(prompt);
+        return getChatCompletion(prompt);
     }
 
     public String getCourseAnalysis(String course, String faculty, String details) {
@@ -61,9 +58,7 @@ public class RecommenderService {
                 Optional.ofNullable(details).orElse("No additional details provided")
         );
 
-        return prompt + learningRecommender.getAzure().getDeploymentName() + learningRecommender.getAzure().getApiEndpoint() +
-                learningRecommender.getAzure().getApiKey();
-        // return getChatCompletion(prompt);
+        return getChatCompletion(prompt);
     }
 
     private String getChatCompletion(String prompt) {
