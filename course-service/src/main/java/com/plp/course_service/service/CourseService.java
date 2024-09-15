@@ -70,9 +70,8 @@ public class CourseService {
         dto.setSemester(course.getSemester());
         dto.setEcts(course.getEcts());
 
-        // TODO: popravi da se vraca getUserId
         List<Long> participantIds = course.getParticipants().stream()
-                .map(CourseParticipantEntity::getId)
+                .map(CourseParticipantEntity::getUserId)
                 .collect(Collectors.toList());
         dto.setParticipantIds(participantIds);
 
@@ -88,7 +87,7 @@ public class CourseService {
         dto.setEcts(course.getEcts());
         dto.setParticipantIds(
                 course.getParticipants().stream()
-                        .map(CourseParticipantEntity::getId)
+                        .map(CourseParticipantEntity::getUserId)
                         .collect(Collectors.toList())
         );
         return dto;

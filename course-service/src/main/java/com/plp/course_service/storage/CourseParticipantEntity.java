@@ -27,6 +27,6 @@ public class CourseParticipantEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)
-    @JsonIgnore
+    @JsonIgnore // TODO: vidi jel treba maknuti
     private CourseEntity course;
 }
