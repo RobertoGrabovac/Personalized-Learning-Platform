@@ -4,6 +4,7 @@ import com.plp.user_service.model.User;
 import com.plp.user_service.storage.AccountType;
 import com.plp.user_service.storage.UserEntity;
 import com.plp.user_service.storage.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 
@@ -96,31 +97,10 @@ public class UserService {
         return user;
     }
 
-//    public Boolean validateAccountType(String authHeader, AccountType accountType) {
-//        return extractApiKey(authHeader)
-//                .flatMap(this::findUserByApiKey)
-//                .map(user -> user.accountType().ordinal() >= accountType.ordinal())
-//                .orElse(false);
-//    }
-//
-//    private Optional<User> findUserByApiKey(String apiKey) {
-//        return Optional.of(userRepository.findByApiKey(apiKey)
-//                .map(User::fromUserEntity)
-//                .orElseThrow());
-//    }
+    public Long getUserIdByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(UserEntity::getId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
+    }
 
-//    private Optional<String> extractApiKey(String authorizationHeaderValue) {
-//        String base64Credentials = authorizationHeaderValue.substring("Basic ".length()).trim();
-//
-//        byte[] decodedBytes = Base64.getDecoder().decode(base64Credentials);
-//        String decodedCredentials = new String(decodedBytes);
-//
-//        String[] credentials = decodedCredentials.split(":", 2);
-//
-//        if (credentials.length != 2) {
-//            throw new IllegalArgumentException("Invalid credentials format.");
-//        }
-//
-//        return Optional.ofNullable(credentials[1]);
-//    }
 }

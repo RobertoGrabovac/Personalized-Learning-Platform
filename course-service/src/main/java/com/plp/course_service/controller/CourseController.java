@@ -6,10 +6,13 @@ import com.plp.course_service.storage.CourseEntity;
 import com.plp.course_service.storage.CourseParticipantEntity;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 
@@ -45,8 +48,11 @@ public class CourseController {
     @PostMapping("/{courseId}/enroll")
     public ResponseEntity<String> enrollInCourse(
             @PathVariable Long courseId,
-            @RequestParam Long userId) {
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
         try {
+            String username = extractUsernameFromAuthHeader(authHeader);
+            Long userId = getUserIdByUsername(username);
+
             courseService.enrollUserInCourse(userId, courseId);
             return ResponseEntity.ok("User enrolled successfully in course with ID: " + courseId);
         } catch (EntityNotFoundException | IllegalStateException e) {
@@ -80,5 +86,23 @@ public class CourseController {
         } catch (EntityNotFoundException | IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
+    }
+
+    private String extractUsernameFromAuthHeader(String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Basic ")) {
+            String base64Credentials = authHeader.substring("Basic".length()).trim();
+            byte[] decodedBytes = Base64.getDecoder().decode(base64Credentials);
+            String credentials = new String(decodedBytes);
+            String[] values = credentials.split(":", 2);
+            return values[0];
+        }
+        throw new IllegalArgumentException("Invalid Authorization header");
+    }
+
+    // TODO: refactor
+    private Long getUserIdByUsername(String username) {
+        String url = "http://user-service:8081/users/username/" + username;
+        RestTemplate restTemplate = new RestTemplate();
+        return restTemplate.getForObject(url, Long.class);
     }
 }

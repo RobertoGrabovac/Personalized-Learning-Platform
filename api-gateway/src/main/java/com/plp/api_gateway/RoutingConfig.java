@@ -33,7 +33,10 @@ public class RoutingConfig {
                         .uri("http://user-service:8081")
                 ).route(p -> p
                         .path("/courses/**")
-                        .filters(f -> f.filter(standardAccountTypeFilter.apply(standardAccountTypeFilter.getConfig())))
+                        .filters(f -> f
+                                .filter(standardAccountTypeFilter.apply(standardAccountTypeFilter.getConfig()))
+                                .preserveHostHeader()
+                        )
                         .uri("http://course-service:8083")
                 ).route(p -> p
                         .path("/course/analysis")

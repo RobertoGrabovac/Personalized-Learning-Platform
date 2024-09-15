@@ -92,9 +92,10 @@ public class UserController {
         }
     }
 
-    @GetMapping("/test")
-    public String test() {
-        return "Test";
+    @GetMapping("/username/{username}")
+    public ResponseEntity<Long> getUserIdByUsername(@PathVariable String username) {
+        Long userId = userService.getUserIdByUsername(username);
+        return ResponseEntity.ok(userId);
     }
 
 }
