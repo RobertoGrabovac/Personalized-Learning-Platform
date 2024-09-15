@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -91,6 +92,26 @@ public class CourseService {
                         .collect(Collectors.toList())
         );
         return dto;
+    }
+
+    public void deleteCourse(Long courseId) {
+        Optional<CourseEntity> course = courseRepository.findById(courseId);
+        if (course.isPresent()) {
+            courseRepository.delete(course.get());
+        } else {
+            throw new EntityNotFoundException("Course with ID " + courseId + " not found");
+        }
+    }
+
+    public void removeParticipantFromCourse(Long userId, Long courseId) {
+        CourseEntity course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new EntityNotFoundException("Course with ID " + courseId + " not found"));
+
+        CourseParticipantEntity participant = courseParticipantRepository.findByUserIdAndCourseId(userId, courseId)
+                .orElseThrow(() -> new EntityNotFoundException("User with ID " + userId + " not found in course " + courseId));
+
+        course.getParticipants().remove(participant);
+        courseParticipantRepository.delete(participant);
     }
 }
 
